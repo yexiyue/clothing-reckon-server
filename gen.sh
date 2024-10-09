@@ -1,0 +1,1 @@
+sea generate entity -l -o entity/src --with-serde both
