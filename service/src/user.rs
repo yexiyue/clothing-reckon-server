@@ -36,7 +36,7 @@ impl UserService {
             .ok_or(DbErr::RecordNotFound("Cannot find user".into()))?;
 
         let user_clone = user.clone();
-        user.into_active_model().delete(db).await?;
+        user.delete(db).await?;
 
         Ok(user_clone)
     }
@@ -61,7 +61,7 @@ impl UserService {
             user.phone_number = sea_orm::ActiveValue::Set(phone_number);
         }
 
-        Ok(user.update(db).await?.try_into_model()?)
+        Ok(user.update(db).await?)
     }
 
     pub async fn find_by_phone_number(db: &DbConn, phone_number: String) -> Result<Model> {
