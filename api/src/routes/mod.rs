@@ -1,2 +1,3 @@
-pub mod user;
 pub mod boss;
+pub mod staff;
+pub mod user;

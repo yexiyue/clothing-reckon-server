@@ -10,7 +10,10 @@ pub struct AnyhowError(anyhow::Error);
 
 impl IntoResponse for AnyhowError {
     fn into_response(self) -> Response {
-        let body = Json(json!({"error":format!("Something went wrong: {}", self.0)}));
+        let body = Json(json!({
+            "code":StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
+            "reason":format!("Something went wrong: {}", self.0)
+        }));
 
         (StatusCode::INTERNAL_SERVER_ERROR, body).into_response()
     }
@@ -42,7 +45,8 @@ impl IntoResponse for AuthError {
             AuthError::InvalidToken => (StatusCode::BAD_REQUEST, "Invalid token"),
         };
         let body = Json(json!({
-            "error": error_message,
+            "code": status.as_u16(),
+            "reason": error_message,
         }));
         (status, body).into_response()
     }

@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod boss;
 pub mod user;
+pub mod staff;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ListQueryParams {

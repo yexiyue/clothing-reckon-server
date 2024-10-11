@@ -18,6 +18,7 @@ impl MigrationTrait for Migration {
                     .col(integer(ProductionItem::Count))
                     .col(integer(ProductionItem::ProductionId))
                     .col(integer(ProductionItem::ClothingId))
+                    .col(integer(ProductionItem::Salary))
                     .foreign_key(
                         ForeignKey::create()
                             .from(ProductionItem::Table, ProductionItem::ProductionId)
@@ -51,5 +52,6 @@ pub enum ProductionItem {
     UintPrice,
     ClothingId,
     ProductionId,
+    Salary,
     Count,
 }

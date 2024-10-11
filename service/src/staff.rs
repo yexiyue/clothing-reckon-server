@@ -1,77 +1,78 @@
-pub struct BossService;
-use ::entity::boss::{ActiveModel, Column, Entity, Model};
+use ::entity::staff::{ActiveModel, Column, Entity, Model};
 use anyhow::Result;
 use sea_orm::*;
 use serde::{Deserialize, Serialize};
 
 use crate::{ListQueryParams, ListResult};
+pub struct StaffService;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct CreateBossParams {
+pub struct CreateStaffParams {
     pub name: String,
     pub phone_number: String,
     pub description: Option<String>,
-    pub address: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct UpdateBossParams {
+pub struct UpdateStaffParams {
     pub name: Option<String>,
     pub phone_number: Option<String>,
     pub description: Option<String>,
-    pub address: Option<String>,
 }
 
-impl BossService {
-    pub async fn create(db: &DbConn, user_id: i32, params: CreateBossParams) -> Result<Model> {
-        let boss = ActiveModel {
+impl StaffService {
+    pub async fn create(db: &DbConn, user_id: i32, params: CreateStaffParams) -> Result<Model> {
+        let staff = ActiveModel {
             name: sea_orm::ActiveValue::Set(params.name),
             phone_number: sea_orm::ActiveValue::Set(params.phone_number),
             description: sea_orm::ActiveValue::Set(params.description),
-            address: sea_orm::ActiveValue::Set(params.address),
             user_id: sea_orm::ActiveValue::Set(user_id),
             ..Default::default()
         };
-        Ok(boss.save(db).await?.try_into_model()?)
+        Ok(staff.save(db).await?.try_into_model()?)
     }
 
     pub async fn delete(db: &DbConn, user_id: i32, id: i32) -> Result<Model> {
-        let boss = Entity::find_by_id(id)
+        let staff = Entity::find_by_id(id)
             .one(db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find boss".into()))?;
-        if boss.user_id != user_id {
-            return Err(DbErr::RecordNotFound("Cannot find boss".into()).into());
+            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))?;
+
+        if staff.user_id != user_id {
+            return Err(DbErr::RecordNotFound("Cannot find staff".into()).into());
         }
-        let boss_clone = boss.clone();
-        boss.delete(db).await?;
-        Ok(boss_clone)
+
+        let staff_clone = staff.clone();
+        staff.delete(db).await?;
+        Ok(staff_clone)
     }
 
     pub async fn update(
         db: &DbConn,
         user_id: i32,
         id: i32,
-        params: UpdateBossParams,
+        params: UpdateStaffParams,
     ) -> Result<Model> {
-        let boss = Entity::find_by_id(id)
+        let staff = Entity::find_by_id(id)
             .one(db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find boss".into()))?;
-        if boss.user_id != user_id {
-            return Err(DbErr::RecordNotFound("Cannot find boss".into()).into());
-        }
-        let mut boss = boss.into_active_model();
-        if let Some(name) = params.name {
-            boss.name = sea_orm::ActiveValue::Set(name);
-        }
-        if let Some(phone_number) = params.phone_number {
-            boss.phone_number = sea_orm::ActiveValue::Set(phone_number);
-        }
-        boss.description = sea_orm::ActiveValue::Set(params.description);
-        boss.address = sea_orm::ActiveValue::Set(params.address);
+            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))?;
 
-        Ok(boss.update(db).await?)
+        if staff.user_id != user_id {
+            return Err(DbErr::RecordNotFound("Cannot find staff".into()).into());
+        }
+        let mut staff = staff.into_active_model();
+        if let Some(name) = params.name {
+            staff.name = sea_orm::ActiveValue::Set(name);
+        }
+
+        if let Some(phone_number) = params.phone_number {
+            staff.phone_number = sea_orm::ActiveValue::Set(phone_number);
+        }
+
+        staff.description = sea_orm::ActiveValue::Set(params.description);
+
+        Ok(staff.update(db).await?)
     }
 
     pub async fn find_by_id(db: &DbConn, user_id: i32, id: i32) -> Result<Model> {
@@ -79,10 +80,9 @@ impl BossService {
             .filter(Column::UserId.eq(user_id))
             .one(db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find boss".into()))?)
+            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))?)
     }
 
-    // 查找用户关联的boss
     pub async fn find_by_user_id(
         db: &DbConn,
         user_id: i32,

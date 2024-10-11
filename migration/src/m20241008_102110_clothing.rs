@@ -14,10 +14,10 @@ impl MigrationTrait for Migration {
                     .table(Clothing::Table)
                     .if_not_exists()
                     .col(pk_auto(Clothing::Id))
-                    .col(string(Clothing::Name).not_null())
-                    .col(string(Clothing::Description))
-                    .col(integer(Clothing::Price).not_null())
-                    .col(string(Clothing::Image))
+                    .col(string(Clothing::Name))
+                    .col(string_null(Clothing::Description))
+                    .col(integer(Clothing::Price))
+                    .col(string_null(Clothing::Image))
                     .col(
                         timestamp_with_time_zone(Clothing::CreateAt)
                             .default(Expr::current_timestamp()),

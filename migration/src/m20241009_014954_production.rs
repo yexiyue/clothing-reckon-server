@@ -20,6 +20,8 @@ impl MigrationTrait for Migration {
                             .default(Expr::current_timestamp()),
                     )
                     .col(integer(Production::StaffId))
+                    .col(integer(Production::TotalSalary))
+                    .col(boolean(Production::Settled).default(Expr::value(false)))
                     .foreign_key(
                         ForeignKey::create()
                             .from(Production::Table, Production::StaffId)
@@ -44,6 +46,8 @@ pub enum Production {
     Table,
     Id,
     StaffId,
+    TotalSalary,
+    Settled,
     CreateAt,
     Description,
 }
