@@ -34,13 +34,10 @@ impl StaffService {
 
     pub async fn delete(db: &DbConn, user_id: i32, id: i32) -> Result<Model> {
         let staff = Entity::find_by_id(id)
+            .filter(Column::UserId.eq(user_id))
             .one(db)
             .await?
             .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))?;
-
-        if staff.user_id != user_id {
-            return Err(DbErr::RecordNotFound("Cannot find staff".into()).into());
-        }
 
         let staff_clone = staff.clone();
         staff.delete(db).await?;
@@ -54,13 +51,11 @@ impl StaffService {
         params: UpdateStaffParams,
     ) -> Result<Model> {
         let staff = Entity::find_by_id(id)
+            .filter(Column::UserId.eq(user_id))
             .one(db)
             .await?
             .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))?;
 
-        if staff.user_id != user_id {
-            return Err(DbErr::RecordNotFound("Cannot find staff".into()).into());
-        }
         let mut staff = staff.into_active_model();
         if let Some(name) = params.name {
             staff.name = sea_orm::ActiveValue::Set(name);
@@ -100,7 +95,7 @@ impl StaffService {
             );
         }
         let total = select.clone().count(db).await?;
-        let (page, page_size) = (params.page.unwrap_or(0), params.page_size.unwrap_or(10));
+        let (page, page_size) = (params.page.unwrap(), params.page_size.unwrap());
         let data = select.paginate(db, page_size).fetch_page(page).await?;
 
         Ok(ListResult { total, data })

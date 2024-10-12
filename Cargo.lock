@@ -146,6 +146,7 @@ dependencies = [
  "serde_json",
  "service",
  "tower-http",
+ "tracing",
 ]
 
 [[package]]
@@ -3015,6 +3016,7 @@ dependencies = [
  "entity",
  "sea-orm",
  "serde",
+ "tracing",
 ]
 
 [[package]]

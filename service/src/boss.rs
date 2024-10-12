@@ -37,12 +37,11 @@ impl BossService {
 
     pub async fn delete(db: &DbConn, user_id: i32, id: i32) -> Result<Model> {
         let boss = Entity::find_by_id(id)
+            .filter(Column::UserId.eq(user_id))
             .one(db)
             .await?
             .ok_or(DbErr::RecordNotFound("Cannot find boss".into()))?;
-        if boss.user_id != user_id {
-            return Err(DbErr::RecordNotFound("Cannot find boss".into()).into());
-        }
+
         let boss_clone = boss.clone();
         boss.delete(db).await?;
         Ok(boss_clone)
@@ -55,12 +54,11 @@ impl BossService {
         params: UpdateBossParams,
     ) -> Result<Model> {
         let boss = Entity::find_by_id(id)
+            .filter(Column::UserId.eq(user_id))
             .one(db)
             .await?
             .ok_or(DbErr::RecordNotFound("Cannot find boss".into()))?;
-        if boss.user_id != user_id {
-            return Err(DbErr::RecordNotFound("Cannot find boss".into()).into());
-        }
+
         let mut boss = boss.into_active_model();
         if let Some(name) = params.name {
             boss.name = sea_orm::ActiveValue::Set(name);
@@ -100,7 +98,7 @@ impl BossService {
             );
         }
         let total = select.clone().count(db).await?;
-        let (page, page_size) = (params.page.unwrap_or(0), params.page_size.unwrap_or(10));
+        let (page, page_size) = (params.page.unwrap(), params.page_size.unwrap());
         let data = select.paginate(db, page_size).fetch_page(page).await?;
 
         Ok(ListResult { total, data })

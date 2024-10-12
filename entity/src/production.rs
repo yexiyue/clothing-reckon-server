@@ -11,6 +11,8 @@ pub struct Model {
     pub description: Option<String>,
     pub create_at: DateTimeWithTimeZone,
     pub staff_id: i32,
+    pub total_salary: i32,
+    pub settled: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
