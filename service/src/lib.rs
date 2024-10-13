@@ -6,6 +6,7 @@ pub mod clothing;
 pub mod procurement;
 pub mod staff;
 pub mod user;
+pub mod shipment;
 
 mod utils;
 

@@ -5,7 +5,7 @@ use axum::{
     Json, Router,
 };
 use service::{
-    procurement::{CreateProcurementParams, ProcurementService, UpdateProcurementParams},
+    shipment::{CreateShipmentParams, ShipmentService, UpdateShipmentParams},
     ListQueryParams,
 };
 
@@ -13,21 +13,16 @@ use crate::{error::AppError, jwt::Claims, state::AppState};
 
 pub fn route() -> Router<AppState> {
     Router::new()
-        .route("/procurement", post(create).get(find))
-        .route(
-            "/procurement/:id",
-            get(find_by_id).put(update).delete(delete),
-        )
+        .route("/shipment", post(create).get(find))
+        .route("/shipment/:id", get(find_by_id).put(update).delete(delete))
 }
 
 async fn create(
     State(AppState { db, .. }): State<AppState>,
     Claims { user_id, .. }: Claims,
-    Json(params): Json<CreateProcurementParams>,
+    Json(params): Json<CreateShipmentParams>,
 ) -> Result<impl IntoResponse, AppError> {
-    Ok(Json(
-        ProcurementService::create(&db, user_id, params).await?,
-    ))
+    Ok(Json(ShipmentService::create(&db, user_id, params).await?))
 }
 
 async fn delete(
@@ -35,17 +30,17 @@ async fn delete(
     Claims { user_id, .. }: Claims,
     Path(id): Path<i32>,
 ) -> Result<impl IntoResponse, AppError> {
-    Ok(Json(ProcurementService::delete(&db, user_id, id).await?))
+    Ok(Json(ShipmentService::delete(&db, user_id, id).await?))
 }
 
 async fn update(
     State(AppState { db, .. }): State<AppState>,
     Claims { user_id, .. }: Claims,
     Path(id): Path<i32>,
-    Json(params): Json<UpdateProcurementParams>,
+    Json(params): Json<UpdateShipmentParams>,
 ) -> Result<impl IntoResponse, AppError> {
     Ok(Json(
-        ProcurementService::update(&db, user_id, id, params).await?,
+        ShipmentService::update(&db, user_id, id, params).await?,
     ))
 }
 
@@ -54,9 +49,7 @@ async fn find_by_id(
     Path(id): Path<i32>,
     Claims { user_id, .. }: Claims,
 ) -> Result<impl IntoResponse, AppError> {
-    Ok(Json(
-        ProcurementService::find_by_id(&db, user_id, id).await?,
-    ))
+    Ok(Json(ShipmentService::find_by_id(&db, user_id, id).await?))
 }
 
 async fn find(
@@ -65,6 +58,6 @@ async fn find(
     Query(params): Query<ListQueryParams>,
 ) -> Result<impl IntoResponse, AppError> {
     Ok(Json(
-        ProcurementService::find_by_user_id(&db, user_id, params).await?,
+        ShipmentService::find_by_user_id(&db, user_id, params).await?,
     ))
 }
