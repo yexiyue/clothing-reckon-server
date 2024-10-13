@@ -18,6 +18,7 @@ pub async fn router(db: DatabaseConnection, jwt_secret: String) -> anyhow::Resul
         .merge(routes::boss::route())
         .merge(routes::staff::route())
         .merge(routes::clothing::route())
+        .merge(routes::procurement::route())
         .with_state(AppState::new(db, jwt_secret))
         .layer(TimeoutLayer::new(Duration::from_secs(5)))
         .layer(CorsLayer::permissive());

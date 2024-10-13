@@ -13,7 +13,7 @@ use crate::{error::AppError, jwt::Claims, state::AppState};
 
 pub fn route() -> Router<AppState> {
     Router::new()
-        .route("/boss", post(create).get(find_bosses))
+        .route("/boss", post(create).get(find))
         .route("/boss/:id", get(find_by_id).put(update).delete(delete))
 }
 
@@ -51,7 +51,7 @@ async fn find_by_id(
 }
 
 // 查找当前用户的所有老板列表
-async fn find_bosses(
+async fn find(
     State(AppState { db, .. }): State<AppState>,
     Claims { user_id, .. }: Claims,
     Query(params): Query<ListQueryParams>,

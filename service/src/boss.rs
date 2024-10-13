@@ -1,10 +1,8 @@
 pub struct BossService;
+use crate::{ListQueryParams, ListResult};
 use ::entity::boss::{ActiveModel, Column, Entity, Model};
-use anyhow::Result;
 use sea_orm::*;
 use serde::{Deserialize, Serialize};
-
-use crate::{ListQueryParams, ListResult};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateBossParams {
@@ -23,7 +21,11 @@ pub struct UpdateBossParams {
 }
 
 impl BossService {
-    pub async fn create(db: &DbConn, user_id: i32, params: CreateBossParams) -> Result<Model> {
+    pub async fn create(
+        db: &DbConn,
+        user_id: i32,
+        params: CreateBossParams,
+    ) -> Result<Model, DbErr> {
         let boss = ActiveModel {
             name: sea_orm::ActiveValue::Set(params.name),
             phone_number: sea_orm::ActiveValue::Set(params.phone_number),
@@ -35,7 +37,7 @@ impl BossService {
         Ok(boss.save(db).await?.try_into_model()?)
     }
 
-    pub async fn delete(db: &DbConn, user_id: i32, id: i32) -> Result<Model> {
+    pub async fn delete(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
         let boss = Entity::find_by_id(id)
             .filter(Column::UserId.eq(user_id))
             .one(db)
@@ -52,7 +54,7 @@ impl BossService {
         user_id: i32,
         id: i32,
         params: UpdateBossParams,
-    ) -> Result<Model> {
+    ) -> Result<Model, DbErr> {
         let boss = Entity::find_by_id(id)
             .filter(Column::UserId.eq(user_id))
             .one(db)
@@ -72,7 +74,7 @@ impl BossService {
         Ok(boss.update(db).await?)
     }
 
-    pub async fn find_by_id(db: &DbConn, user_id: i32, id: i32) -> Result<Model> {
+    pub async fn find_by_id(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
         Ok(Entity::find_by_id(id)
             .filter(Column::UserId.eq(user_id))
             .one(db)
@@ -85,7 +87,7 @@ impl BossService {
         db: &DbConn,
         user_id: i32,
         params: ListQueryParams,
-    ) -> Result<ListResult<Model>> {
+    ) -> Result<ListResult<Model>, DbErr> {
         let mut select = Entity::find().order_by_desc(Column::CreateAt);
 
         select = select.filter(Column::UserId.eq(user_id));
@@ -97,6 +99,15 @@ impl BossService {
                     .or(Column::Description.contains(&search)),
             );
         }
+
+        if let Some(start_time) = params.start_time {
+            select = select.filter(Column::CreateAt.gt(start_time));
+        }
+
+        if let Some(end_time) = params.end_time {
+            select = select.filter(Column::CreateAt.lt(end_time));
+        }
+
         let total = select.clone().count(db).await?;
         let (page, page_size) = (params.page.unwrap(), params.page_size.unwrap());
         let data = select.paginate(db, page_size).fetch_page(page).await?;

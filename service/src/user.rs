@@ -1,6 +1,5 @@
 pub struct UserService;
 use ::entity::user::{ActiveModel, Column, Entity, Model};
-use anyhow::Result;
 use sea_orm::*;
 use serde::{Deserialize, Serialize};
 
@@ -19,7 +18,7 @@ pub struct UpdateUserParams {
 }
 
 impl UserService {
-    pub async fn create(db: &DbConn, params: CreateUserParams) -> Result<Model> {
+    pub async fn create(db: &DbConn, params: CreateUserParams) -> Result<Model, DbErr> {
         let user = ActiveModel {
             username: sea_orm::ActiveValue::Set(params.username),
             password: sea_orm::ActiveValue::Set(params.password),
@@ -29,7 +28,7 @@ impl UserService {
         Ok(user.save(db).await?.try_into_model()?)
     }
 
-    pub async fn delete(db: &DbConn, id: i32) -> Result<Model> {
+    pub async fn delete(db: &DbConn, id: i32) -> Result<Model, DbErr> {
         let user = Entity::find_by_id(id)
             .one(db)
             .await?
@@ -41,7 +40,7 @@ impl UserService {
         Ok(user_clone)
     }
 
-    pub async fn update(db: &DbConn, id: i32, params: UpdateUserParams) -> Result<Model> {
+    pub async fn update(db: &DbConn, id: i32, params: UpdateUserParams) -> Result<Model, DbErr> {
         let user = Entity::find_by_id(id)
             .one(db)
             .await?
@@ -64,7 +63,7 @@ impl UserService {
         Ok(user.update(db).await?)
     }
 
-    pub async fn find_by_phone_number(db: &DbConn, phone_number: String) -> Result<Model> {
+    pub async fn find_by_phone_number(db: &DbConn, phone_number: String) -> Result<Model, DbErr> {
         let user = Entity::find()
             .filter(Column::PhoneNumber.eq(phone_number))
             .one(db)

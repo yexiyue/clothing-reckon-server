@@ -2,7 +2,6 @@ use ::entity::{
     boss,
     clothing::{ActiveModel, Column, Entity, Model},
 };
-use anyhow::Result;
 use sea_orm::*;
 use sea_query::Query;
 use serde::{Deserialize, Serialize};
@@ -22,7 +21,6 @@ pub struct CreateClothingParams {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UpdateClothingParams {
     pub name: Option<String>,
-    pub price: Option<i32>,
     pub description: Option<String>,
     pub image: Option<String>,
 }
@@ -38,7 +36,11 @@ pub struct ClothingListQueryParams {
 }
 
 impl ClothingService {
-    pub async fn create(db: &DbConn, user_id: i32, params: CreateClothingParams) -> Result<Model> {
+    pub async fn create(
+        db: &DbConn,
+        user_id: i32,
+        params: CreateClothingParams,
+    ) -> Result<Model, DbErr> {
         BossService::find_by_id(db, user_id, params.boss_id).await?;
 
         let staff = ActiveModel {
@@ -52,7 +54,7 @@ impl ClothingService {
         Ok(staff.save(db).await?.try_into_model()?)
     }
 
-    async fn check_permission(db: &DbConn, staff: &Model, user_id: i32) -> Result<()> {
+    async fn check_permission(db: &DbConn, staff: &Model, user_id: i32) -> Result<(), DbErr> {
         if let Some(boss) = staff.find_related(::entity::boss::Entity).one(db).await? {
             if boss.user_id != user_id {
                 return Err(DbErr::RecordNotFound("Cannot delete boss".into()).into());
@@ -61,7 +63,7 @@ impl ClothingService {
         Ok(())
     }
 
-    pub async fn delete(db: &DbConn, user_id: i32, id: i32) -> Result<Model> {
+    pub async fn delete(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
         let staff = Entity::find_by_id(id)
             .one(db)
             .await?
@@ -75,12 +77,13 @@ impl ClothingService {
         Ok(staff_clone)
     }
 
+    // 只能修改一些基本信息不能修改价格
     pub async fn update(
         db: &DbConn,
         user_id: i32,
         id: i32,
         params: UpdateClothingParams,
-    ) -> Result<Model> {
+    ) -> Result<Model, DbErr> {
         let staff = Entity::find_by_id(id)
             .one(db)
             .await?
@@ -94,17 +97,13 @@ impl ClothingService {
             staff.name = sea_orm::ActiveValue::Set(name);
         }
 
-        if let Some(price) = params.price {
-            staff.price = sea_orm::ActiveValue::Set(price);
-        }
-
         staff.description = sea_orm::ActiveValue::Set(params.description);
         staff.image = sea_orm::ActiveValue::Set(params.image);
 
         Ok(staff.update(db).await?)
     }
 
-    pub async fn find_by_id(db: &DbConn, user_id: i32, id: i32) -> Result<Model> {
+    pub async fn find_by_id(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
         let staff = Entity::find_by_id(id)
             .one(db)
             .await?
@@ -119,7 +118,7 @@ impl ClothingService {
         db: &DbConn,
         user_id: i32,
         params: ClothingListQueryParams,
-    ) -> Result<ListResult<Model>> {
+    ) -> Result<ListResult<Model>, DbErr> {
         let mut select = Entity::find().order_by_desc(Column::CreateAt);
 
         select = select.filter(
@@ -140,6 +139,15 @@ impl ClothingService {
                     .or(Column::Description.contains(&search)),
             );
         }
+
+        if let Some(start_time) = params.list_query.start_time {
+            select = select.filter(Column::CreateAt.gt(start_time));
+        }
+
+        if let Some(end_time) = params.list_query.end_time {
+            select = select.filter(Column::CreateAt.lt(end_time));
+        }
+
         let total = select.clone().count(db).await?;
         let (page, page_size) = (
             params.list_query.page.unwrap(),

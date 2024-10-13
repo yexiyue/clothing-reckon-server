@@ -1,9 +1,12 @@
+use sea_orm::prelude::DateTimeWithTimeZone;
 use serde::{Deserialize, Serialize};
 
 pub mod boss;
 pub mod clothing;
+pub mod procurement;
 pub mod staff;
 pub mod user;
+
 mod utils;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -21,6 +24,10 @@ pub struct ListQueryParams {
     pub page_size: Option<u64>,
 
     pub search: Option<String>,
+
+    pub start_time: Option<DateTimeWithTimeZone>,
+
+    pub end_time: Option<DateTimeWithTimeZone>,
 }
 
 #[derive(Debug, Serialize)]
