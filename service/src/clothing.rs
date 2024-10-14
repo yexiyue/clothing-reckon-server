@@ -43,7 +43,7 @@ impl ClothingService {
     ) -> Result<Model, DbErr> {
         BossService::find_by_id(db, user_id, params.boss_id).await?;
 
-        let staff = ActiveModel {
+        let model = ActiveModel {
             name: sea_orm::ActiveValue::Set(params.name),
             price: sea_orm::ActiveValue::Set(params.price),
             description: sea_orm::ActiveValue::Set(params.description),
@@ -51,16 +51,16 @@ impl ClothingService {
             image: sea_orm::ActiveValue::Set(params.image),
             ..Default::default()
         };
-        staff.insert(db).await
+        model.insert(db).await
     }
 
     pub async fn delete(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
-        let staff = Self::find_by_id(db, user_id, id).await?;
+        let model = Self::find_by_id(db, user_id, id).await?;
 
-        let staff_clone = staff.clone();
+        let model_clone = model.clone();
 
-        staff.delete(db).await?;
-        Ok(staff_clone)
+        model.delete(db).await?;
+        Ok(model_clone)
     }
 
     // 只能修改一些基本信息不能修改价格
@@ -70,18 +70,18 @@ impl ClothingService {
         id: i32,
         params: UpdateClothingParams,
     ) -> Result<Model, DbErr> {
-        let staff = Self::find_by_id(db, user_id, id).await?;
+        let model = Self::find_by_id(db, user_id, id).await?;
 
-        let mut staff = staff.into_active_model();
+        let mut model = model.into_active_model();
 
         if let Some(name) = params.name {
-            staff.name = sea_orm::ActiveValue::Set(name);
+            model.name = sea_orm::ActiveValue::Set(name);
         }
 
-        staff.description = sea_orm::ActiveValue::Set(params.description);
-        staff.image = sea_orm::ActiveValue::Set(params.image);
+        model.description = sea_orm::ActiveValue::Set(params.description);
+        model.image = sea_orm::ActiveValue::Set(params.image);
 
-        staff.update(db).await
+        model.update(db).await
     }
 
     pub async fn find_by_id(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
@@ -97,7 +97,7 @@ impl ClothingService {
             )
             .one(db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))
+            .ok_or(DbErr::RecordNotFound("Cannot find model".into()))
     }
 
     pub async fn find_by_user_id(

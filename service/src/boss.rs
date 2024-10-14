@@ -26,7 +26,7 @@ impl BossService {
         user_id: i32,
         params: CreateBossParams,
     ) -> Result<Model, DbErr> {
-        let boss = ActiveModel {
+        let model = ActiveModel {
             name: sea_orm::ActiveValue::Set(params.name),
             phone_number: sea_orm::ActiveValue::Set(params.phone_number),
             description: sea_orm::ActiveValue::Set(params.description),
@@ -34,15 +34,15 @@ impl BossService {
             user_id: sea_orm::ActiveValue::Set(user_id),
             ..Default::default()
         };
-        boss.insert(db).await
+        model.insert(db).await
     }
 
     pub async fn delete(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
-        let boss = Self::find_by_id(db, user_id, id).await?;
+        let model = Self::find_by_id(db, user_id, id).await?;
 
-        let boss_clone = boss.clone();
-        boss.delete(db).await?;
-        Ok(boss_clone)
+        let model_clone = model.clone();
+        model.delete(db).await?;
+        Ok(model_clone)
     }
 
     pub async fn update(
@@ -51,19 +51,19 @@ impl BossService {
         id: i32,
         params: UpdateBossParams,
     ) -> Result<Model, DbErr> {
-        let boss = Self::find_by_id(db, user_id, id).await?;
+        let model = Self::find_by_id(db, user_id, id).await?;
 
-        let mut boss = boss.into_active_model();
+        let mut model = model.into_active_model();
         if let Some(name) = params.name {
-            boss.name = sea_orm::ActiveValue::Set(name);
+            model.name = sea_orm::ActiveValue::Set(name);
         }
         if let Some(phone_number) = params.phone_number {
-            boss.phone_number = sea_orm::ActiveValue::Set(phone_number);
+            model.phone_number = sea_orm::ActiveValue::Set(phone_number);
         }
-        boss.description = sea_orm::ActiveValue::Set(params.description);
-        boss.address = sea_orm::ActiveValue::Set(params.address);
+        model.description = sea_orm::ActiveValue::Set(params.description);
+        model.address = sea_orm::ActiveValue::Set(params.address);
 
-        boss.update(db).await
+        model.update(db).await
     }
 
     pub async fn find_by_id(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
@@ -71,10 +71,10 @@ impl BossService {
             .filter(Column::UserId.eq(user_id))
             .one(db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find boss".into()))
+            .ok_or(DbErr::RecordNotFound("Cannot find model".into()))
     }
 
-    // 查找用户关联的boss
+    // 查找用户关联的model
     pub async fn find_by_user_id(
         db: &DbConn,
         user_id: i32,
