@@ -17,6 +17,7 @@ pub fn route() -> Router<AppState> {
             "/production/:id",
             get(find_by_id).put(update).delete(delete),
         )
+        .route("/production/:id/settle", post(settle))
 }
 
 async fn create(
@@ -44,6 +45,14 @@ async fn update(
     Ok(Json(
         ProductionService::update(&db, user_id, id, params).await?,
     ))
+}
+
+async fn settle(
+    State(AppState { db, .. }): State<AppState>,
+    Claims { user_id, .. }: Claims,
+    Path(id): Path<i32>,
+) -> Result<impl IntoResponse, AppError> {
+    Ok(Json(ProductionService::settle(&db, user_id, id).await?))
 }
 
 async fn find_by_id(

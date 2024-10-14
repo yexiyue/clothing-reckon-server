@@ -5,7 +5,7 @@ use serde_json::json;
 use crate::{error::AppError, jwt::Claims, state::AppState};
 
 pub fn route() -> Router<AppState> {
-    Router::new().nest("/user", Router::new().route("/login", post(login)))
+    Router::new().route("/user/login", post(login))
 }
 
 #[derive(Debug, Deserialize)]

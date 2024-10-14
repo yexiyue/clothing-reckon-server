@@ -150,6 +150,24 @@ impl ProductionService {
         Ok(Production { production, items })
     }
 
+    pub async fn settle(
+        db: &DatabaseConnection,
+        user_id: i32,
+        id: i32,
+    ) -> Result<Production, DbErr> {
+        let production = Self::find_production(db, user_id, id).await?;
+
+        let mut production = production.into_active_model();
+
+        production.settled = Set(true);
+
+        let production = production.update(db).await?;
+
+        let items = Self::find_production_items(db, production.id).await?;
+
+        Ok(Production { production, items })
+    }
+
     pub async fn find_by_id(db: &DbConn, user_id: i32, id: i32) -> Result<Production, DbErr> {
         let production = Self::find_production(db, user_id, id).await?;
 
