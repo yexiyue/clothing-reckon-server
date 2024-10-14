@@ -34,15 +34,11 @@ impl BossService {
             user_id: sea_orm::ActiveValue::Set(user_id),
             ..Default::default()
         };
-        Ok(boss.save(db).await?.try_into_model()?)
+        boss.insert(db).await
     }
 
     pub async fn delete(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
-        let boss = Entity::find_by_id(id)
-            .filter(Column::UserId.eq(user_id))
-            .one(db)
-            .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find boss".into()))?;
+        let boss = Self::find_by_id(db, user_id, id).await?;
 
         let boss_clone = boss.clone();
         boss.delete(db).await?;
@@ -55,11 +51,7 @@ impl BossService {
         id: i32,
         params: UpdateBossParams,
     ) -> Result<Model, DbErr> {
-        let boss = Entity::find_by_id(id)
-            .filter(Column::UserId.eq(user_id))
-            .one(db)
-            .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find boss".into()))?;
+        let boss = Self::find_by_id(db, user_id, id).await?;
 
         let mut boss = boss.into_active_model();
         if let Some(name) = params.name {
@@ -71,15 +63,15 @@ impl BossService {
         boss.description = sea_orm::ActiveValue::Set(params.description);
         boss.address = sea_orm::ActiveValue::Set(params.address);
 
-        Ok(boss.update(db).await?)
+        boss.update(db).await
     }
 
     pub async fn find_by_id(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
-        Ok(Entity::find_by_id(id)
+        Entity::find_by_id(id)
             .filter(Column::UserId.eq(user_id))
             .one(db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find boss".into()))?)
+            .ok_or(DbErr::RecordNotFound("Cannot find boss".into()))
     }
 
     // 查找用户关联的boss

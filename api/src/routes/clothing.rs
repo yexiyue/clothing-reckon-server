@@ -55,9 +55,12 @@ async fn find_by_id(
 async fn find(
     State(AppState { db, .. }): State<AppState>,
     Claims { user_id, .. }: Claims,
-    Query(params): Query<ClothingListQueryParams>,
+    Query(ClothingListQueryParams {
+        boss_ids,
+        list_query,
+    }): Query<ClothingListQueryParams>,
 ) -> Result<impl IntoResponse, AppError> {
     Ok(Json(
-        ClothingService::find_by_user_id(&db, user_id, params).await?,
+        ClothingService::find_by_user_id(&db, user_id, list_query, boss_ids).await?,
     ))
 }

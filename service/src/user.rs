@@ -25,7 +25,7 @@ impl UserService {
             phone_number: sea_orm::ActiveValue::Set(params.phone_number),
             ..Default::default()
         };
-        Ok(user.save(db).await?.try_into_model()?)
+        user.insert(db).await
     }
 
     pub async fn delete(db: &DbConn, id: i32) -> Result<Model, DbErr> {
@@ -60,16 +60,14 @@ impl UserService {
             user.phone_number = sea_orm::ActiveValue::Set(phone_number);
         }
 
-        Ok(user.update(db).await?)
+        user.update(db).await
     }
 
     pub async fn find_by_phone_number(db: &DbConn, phone_number: String) -> Result<Model, DbErr> {
-        let user = Entity::find()
+        Entity::find()
             .filter(Column::PhoneNumber.eq(phone_number))
             .one(db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find user".into()))?;
-
-        Ok(user)
+            .ok_or(DbErr::RecordNotFound("Cannot find user".into()))
     }
 }

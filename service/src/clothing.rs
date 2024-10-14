@@ -51,27 +51,13 @@ impl ClothingService {
             image: sea_orm::ActiveValue::Set(params.image),
             ..Default::default()
         };
-        Ok(staff.save(db).await?.try_into_model()?)
-    }
-
-    async fn check_permission(db: &DbConn, staff: &Model, user_id: i32) -> Result<(), DbErr> {
-        if let Some(boss) = staff.find_related(::entity::boss::Entity).one(db).await? {
-            if boss.user_id != user_id {
-                return Err(DbErr::RecordNotFound("Cannot delete boss".into()).into());
-            }
-        }
-        Ok(())
+        staff.insert(db).await
     }
 
     pub async fn delete(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
-        let staff = Entity::find_by_id(id)
-            .one(db)
-            .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))?;
+        let staff = Self::find_by_id(db, user_id, id).await?;
 
         let staff_clone = staff.clone();
-
-        Self::check_permission(db, &staff, user_id).await?;
 
         staff.delete(db).await?;
         Ok(staff_clone)
@@ -84,12 +70,7 @@ impl ClothingService {
         id: i32,
         params: UpdateClothingParams,
     ) -> Result<Model, DbErr> {
-        let staff = Entity::find_by_id(id)
-            .one(db)
-            .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))?;
-
-        Self::check_permission(db, &staff, user_id).await?;
+        let staff = Self::find_by_id(db, user_id, id).await?;
 
         let mut staff = staff.into_active_model();
 
@@ -100,24 +81,30 @@ impl ClothingService {
         staff.description = sea_orm::ActiveValue::Set(params.description);
         staff.image = sea_orm::ActiveValue::Set(params.image);
 
-        Ok(staff.update(db).await?)
+        staff.update(db).await
     }
 
     pub async fn find_by_id(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
-        let staff = Entity::find_by_id(id)
+        Entity::find_by_id(id)
+            .filter(
+                Column::BossId.in_subquery(
+                    Query::select()
+                        .column(boss::Column::Id)
+                        .and_where(boss::Column::UserId.eq(user_id))
+                        .from(boss::Entity)
+                        .to_owned(),
+                ),
+            )
             .one(db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))?;
-
-        Self::check_permission(db, &staff, user_id).await?;
-
-        Ok(staff)
+            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))
     }
 
     pub async fn find_by_user_id(
         db: &DbConn,
         user_id: i32,
-        params: ClothingListQueryParams,
+        params: ListQueryParams,
+        boss_ids: Option<Vec<i32>>,
     ) -> Result<ListResult<Model>, DbErr> {
         let mut select = Entity::find().order_by_desc(Column::CreateAt);
 
@@ -126,13 +113,13 @@ impl ClothingService {
                 Query::select()
                     .column(boss::Column::Id)
                     .and_where(boss::Column::UserId.eq(user_id))
-                    .and_where_option(params.boss_ids.map(|ids| boss::Column::Id.is_in(ids)))
+                    .and_where_option(boss_ids.map(|ids| boss::Column::Id.is_in(ids)))
                     .from(boss::Entity)
                     .to_owned(),
             ),
         );
 
-        if let Some(search) = params.list_query.search {
+        if let Some(search) = params.search {
             select = select.filter(
                 Column::Name
                     .contains(&search)
@@ -140,19 +127,16 @@ impl ClothingService {
             );
         }
 
-        if let Some(start_time) = params.list_query.start_time {
+        if let Some(start_time) = params.start_time {
             select = select.filter(Column::CreateAt.gt(start_time));
         }
 
-        if let Some(end_time) = params.list_query.end_time {
+        if let Some(end_time) = params.end_time {
             select = select.filter(Column::CreateAt.lt(end_time));
         }
 
         let total = select.clone().count(db).await?;
-        let (page, page_size) = (
-            params.list_query.page.unwrap(),
-            params.list_query.page_size.unwrap(),
-        );
+        let (page, page_size) = (params.page.unwrap(), params.page_size.unwrap());
         let data = select.paginate(db, page_size).fetch_page(page).await?;
 
         Ok(ListResult { total, data })

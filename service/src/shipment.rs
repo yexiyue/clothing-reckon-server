@@ -36,10 +36,10 @@ impl ShipmentService {
         db: &DbConn,
         shipment_id: i32,
     ) -> Result<Vec<shipment_item::Model>, DbErr> {
-        Ok(shipment_item::Entity::find()
+        shipment_item::Entity::find()
             .filter(shipment_item::Column::ShipmentId.eq(shipment_id))
             .all(db)
-            .await?)
+            .await
     }
 
     pub async fn create(
@@ -52,7 +52,7 @@ impl ShipmentService {
             user_id: Set(user_id),
             ..Default::default()
         };
-        let shipment = shipment.save(db).await?.try_into_model()?;
+        let shipment = shipment.insert(db).await?;
 
         let shipment_items = params
             .items
@@ -72,7 +72,7 @@ impl ShipmentService {
         let items = Self::find_shipment_items(db, shipment.id).await?;
 
         Ok(Shipment {
-            shipment: shipment,
+            shipment,
             items,
         })
     }
@@ -87,7 +87,7 @@ impl ShipmentService {
         let items = Self::find_shipment_items(db, shipment.id).await?;
 
         Ok(Shipment {
-            shipment: shipment,
+            shipment,
             items,
         })
     }
@@ -104,7 +104,7 @@ impl ShipmentService {
         shipment.clone().delete(db).await?;
 
         Ok(Shipment {
-            shipment: shipment,
+            shipment,
             items,
         })
     }

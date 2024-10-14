@@ -36,10 +36,10 @@ impl ProcurementService {
         db: &DbConn,
         procurement_id: i32,
     ) -> Result<Vec<procurement_item::Model>, DbErr> {
-        Ok(procurement_item::Entity::find()
+        procurement_item::Entity::find()
             .filter(procurement_item::Column::ProcurementId.eq(procurement_id))
             .all(db)
-            .await?)
+            .await
     }
 
     pub async fn create(
@@ -52,7 +52,7 @@ impl ProcurementService {
             user_id: Set(user_id),
             ..Default::default()
         };
-        let procurement = procurement.save(db).await?.try_into_model()?;
+        let procurement = procurement.insert(db).await?;
 
         let procurement_items = params
             .items

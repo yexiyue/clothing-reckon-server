@@ -32,15 +32,11 @@ impl StaffService {
             user_id: sea_orm::ActiveValue::Set(user_id),
             ..Default::default()
         };
-        Ok(staff.save(db).await?.try_into_model()?)
+        staff.insert(db).await
     }
 
     pub async fn delete(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
-        let staff = Entity::find_by_id(id)
-            .filter(Column::UserId.eq(user_id))
-            .one(db)
-            .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))?;
+        let staff = Self::find_by_id(db, user_id, id).await?;
 
         let staff_clone = staff.clone();
         staff.delete(db).await?;
@@ -53,11 +49,7 @@ impl StaffService {
         id: i32,
         params: UpdateStaffParams,
     ) -> Result<Model, DbErr> {
-        let staff = Entity::find_by_id(id)
-            .filter(Column::UserId.eq(user_id))
-            .one(db)
-            .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))?;
+        let staff = Self::find_by_id(db, user_id, id).await?;
 
         let mut staff = staff.into_active_model();
         if let Some(name) = params.name {
@@ -70,15 +62,15 @@ impl StaffService {
 
         staff.description = sea_orm::ActiveValue::Set(params.description);
 
-        Ok(staff.update(db).await?)
+        staff.update(db).await
     }
 
     pub async fn find_by_id(db: &DbConn, user_id: i32, id: i32) -> Result<Model, DbErr> {
-        Ok(Entity::find_by_id(id)
+        Entity::find_by_id(id)
             .filter(Column::UserId.eq(user_id))
             .one(db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))?)
+            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))
     }
 
     pub async fn find_by_user_id(

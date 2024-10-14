@@ -7,6 +7,7 @@ pub mod procurement;
 pub mod staff;
 pub mod user;
 pub mod shipment;
+pub mod production;
 
 mod utils;
 
