@@ -13,7 +13,7 @@ pub struct ClothingService;
 pub struct CreateClothingParams {
     pub boss_id: i32,
     pub name: String,
-    pub price: i32,
+    pub price: f32,
     pub description: Option<String>,
     pub image: Option<String>,
 }
@@ -97,7 +97,7 @@ impl ClothingService {
             )
             .one(db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find model".into()))
+            .ok_or(DbErr::RecordNotFound("Cannot find clothing".into()))
     }
 
     pub async fn find_by_user_id(

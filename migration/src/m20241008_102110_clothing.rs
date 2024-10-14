@@ -16,7 +16,7 @@ impl MigrationTrait for Migration {
                     .col(pk_auto(Clothing::Id))
                     .col(string(Clothing::Name))
                     .col(string_null(Clothing::Description))
-                    .col(integer(Clothing::Price))
+                    .col(float(Clothing::Price))
                     .col(string_null(Clothing::Image))
                     .col(
                         timestamp_with_time_zone(Clothing::CreateAt)

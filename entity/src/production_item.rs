@@ -3,16 +3,18 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "production_item")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub uint_price: i32,
+    #[sea_orm(column_type = "Float")]
+    pub uint_price: f32,
     pub count: i32,
     pub production_id: i32,
     pub clothing_id: i32,
-    pub salary: i32,
+    #[sea_orm(column_type = "Float")]
+    pub salary: f32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

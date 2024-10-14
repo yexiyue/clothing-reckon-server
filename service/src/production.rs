@@ -14,7 +14,7 @@ pub struct ProductionService;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateProductionItem {
-    pub uint_price: i32,
+    pub uint_price: f32,
     pub count: i32,
     pub clothing_id: i32,
 }
@@ -39,6 +39,7 @@ pub struct Production {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProductionListQueryParams {
     #[serde(flatten)]
     pub list_query: ListQueryParams,
@@ -88,8 +89,8 @@ impl ProductionService {
         let total_salary = params
             .items
             .iter()
-            .map(|item| item.uint_price * item.count)
-            .sum::<i32>();
+            .map(|item| item.uint_price * item.count as f32)
+            .sum::<f32>();
 
         let production = production::ActiveModel {
             description: ActiveValue::Set(params.description),
@@ -107,7 +108,7 @@ impl ProductionService {
                 uint_price: Set(item.uint_price),
                 count: Set(item.count),
                 production_id: Set(production.id),
-                salary: Set(item.uint_price * item.count),
+                salary: Set(item.uint_price * item.count as f32),
                 clothing_id: Set(item.clothing_id),
                 ..Default::default()
             })

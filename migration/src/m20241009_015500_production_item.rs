@@ -14,11 +14,11 @@ impl MigrationTrait for Migration {
                     .table(ProductionItem::Table)
                     .if_not_exists()
                     .col(pk_auto(ProductionItem::Id))
-                    .col(integer(ProductionItem::UintPrice))
+                    .col(float(ProductionItem::UintPrice))
                     .col(integer(ProductionItem::Count))
                     .col(integer(ProductionItem::ProductionId))
                     .col(integer(ProductionItem::ClothingId))
-                    .col(integer(ProductionItem::Salary))
+                    .col(float(ProductionItem::Salary))
                     .foreign_key(
                         ForeignKey::create()
                             .from(ProductionItem::Table, ProductionItem::ProductionId)

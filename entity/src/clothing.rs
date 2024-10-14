@@ -3,14 +3,15 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "clothing")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub name: String,
     pub description: Option<String>,
-    pub price: i32,
+    #[sea_orm(column_type = "Float")]
+    pub price: f32,
     pub image: Option<String>,
     pub create_at: DateTimeWithTimeZone,
     pub boss_id: i32,

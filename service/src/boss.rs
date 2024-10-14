@@ -71,7 +71,7 @@ impl BossService {
             .filter(Column::UserId.eq(user_id))
             .one(db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find model".into()))
+            .ok_or(DbErr::RecordNotFound("Cannot find boss".into()))
     }
 
     // 查找用户关联的model

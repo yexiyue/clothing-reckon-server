@@ -70,7 +70,7 @@ impl StaffService {
             .filter(Column::UserId.eq(user_id))
             .one(db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Cannot find model".into()))
+            .ok_or(DbErr::RecordNotFound("Cannot find staff".into()))
     }
 
     pub async fn find_by_user_id(

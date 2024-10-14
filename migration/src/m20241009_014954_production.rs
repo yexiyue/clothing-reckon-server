@@ -20,7 +20,7 @@ impl MigrationTrait for Migration {
                             .default(Expr::current_timestamp()),
                     )
                     .col(integer(Production::StaffId))
-                    .col(integer(Production::TotalSalary))
+                    .col(float(Production::TotalSalary))
                     .col(boolean(Production::Settled).default(Expr::value(false)))
                     .foreign_key(
                         ForeignKey::create()
