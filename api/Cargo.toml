@@ -16,3 +16,4 @@ anyhow = { workspace = true }
 migration = { path = "../migration" }
 service = { path = "../service" }
 tracing = "0.1.40"
+bcrypt = "0.15.1"

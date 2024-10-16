@@ -16,7 +16,7 @@ pub struct Claims {
 
 impl Claims {
     pub fn new(user_id: i32) -> Self {
-        let exp = (chrono::Utc::now() + chrono::Duration::hours(8)).timestamp();
+        let exp = (chrono::Utc::now() + chrono::Duration::days(15)).timestamp();
         Self { user_id, exp }
     }
 
